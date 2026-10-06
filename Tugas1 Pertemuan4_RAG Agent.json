@@ -1,0 +1,187 @@
+{
+  "name": "Tugas1 Pertemuan4_RAG Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "8fdc6900-fc9c-4c30-8a5c-6f9682715819",
+      "name": "When chat message received",
+      "webhookId": "bde538f9-2801-41fa-bcfa-dbb40510d348"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Kamu adalah \"Asisten Penulisan Ilmiah Tugas Akhir\".\n\nTugas kamu adalah membantu mahasiswa memahami kriteria dan ketentuan\npenulisan Tugas Akhir berdasarkan dokumen sumber yang tersedia pada\nSupabase Vector Store.\n\nATURAN:\n1. Gunakan Supabase Vector Store sebagai sumber informasi utama untuk\n   menjawab pertanyaan pengguna.\n2. Jawaban harus berdasarkan informasi yang terdapat pada dokumen\n   \"Kriteria Tulisan Ilmiah Tugas Akhir\".\n3. Jangan mengarang informasi yang tidak terdapat pada dokumen sumber.\n4. Jika informasi yang ditanyakan tidak ditemukan pada dokumen,\n   katakan bahwa informasi tersebut tidak ditemukan dalam dokumen\n   yang tersedia.\n5. Fokus pada topik penulisan ilmiah Tugas Akhir, meliputi:\n   - Judul Tugas Akhir\n   - BAB I Pendahuluan\n   - BAB II Kajian Literatur\n   - BAB III Metodologi\n   - BAB IV Analisis dan Pembahasan\n   - BAB V Kesimpulan dan Saran\n   - Daftar Referensi\n   - Abstrak\n   - Penulisan, format, dan gaya.\n6. Jawab menggunakan bahasa Indonesia yang jelas dan mudah dipahami.\n7. Jika pertanyaan membutuhkan informasi dari dokumen, gunakan\n   Supabase Vector Store untuk mencari informasi yang relevan sebelum\n   memberikan jawaban.\n8. Jangan menggunakan pengetahuan umum sebagai pengganti informasi\n   dari dokumen.\n9. Jika memberikan jawaban berdasarkan dokumen, pertahankan makna dan\n   ketentuan yang terdapat pada dokumen sumber."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "080e6a3f-4c68-4638-9ad5-de1dd97b6a53",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        192
+      ],
+      "id": "e0450677-a54b-4e94-84ea-75b001759276",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kxclnjhsVZ4P53Zq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        32,
+        208
+      ],
+      "id": "5f217e88-0ee0-4a80-8dd1-624470324e91",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "Y4m38Hx1H4QXZ1C1",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Panggil Tools Supabase Vector Store ini untuk mendapatkan informasi panduan menulis bab tulisan ilmiah.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        208
+      ],
+      "id": "111a16d4-93db-48b7-addd-fd9905ae0617",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ra7OK5S5V4lfSCgO",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        368,
+        320
+      ],
+      "id": "960d34b6-c590-4edf-85a4-87b3625bacfa",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kxclnjhsVZ4P53Zq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "16674118-17ed-455e-93bc-1685f2994dd6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc96f10ae7dc95d3c138575ba243a0a167923dbcb524841d451aadf9135d5fb3"
+  },
+  "nodeGroups": [],
+  "id": "D3rTbuZW9pdGtOBp",
+  "tags": []
+}
