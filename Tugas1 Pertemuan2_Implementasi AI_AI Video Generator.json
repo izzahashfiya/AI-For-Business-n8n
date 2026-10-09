@@ -1,0 +1,314 @@
+{
+  "name": "Tugas1 Pertemuan2_Implementasi AI_AI Video Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Generate Video Konten Otomatis",
+        "formDescription": "Isi informasi di bawah ini untuk memulai proses generate video",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "prompt"
+            },
+            {
+              "fieldLabel": "img_url"
+            },
+            {
+              "fieldLabel": "task_type"
+            },
+            {
+              "fieldLabel": "api_key"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -1040,
+        -16
+      ],
+      "id": "95e2a065-99e9-40d3-99a2-dad91615895d",
+      "name": "On form submission",
+      "webhookId": "892f3ef2-86c2-48a1-ac35-d964a6363975"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"grok-imagine/image-to-video\",\n  \"input\": {\n    \"image_urls\": [\n      \"{{ $json.img_url }}\"\n    ],\n    \"prompt\": \"{{$json.prompt}}\",\n    \"mode\": \"normal\",\n    \"duration\": \"6\",\n    \"resolution\": \"480p\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -832,
+        -16
+      ],
+      "id": "2c259ddb-fb31-4a42-97e4-bc2afc208fe5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        -16
+      ],
+      "id": "576f8bed-c2d0-407a-9dc5-a6b1653b476b",
+      "name": "Wait",
+      "webhookId": "81200959-948d-4f22-8d44-dbb94956ff32"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/jobs/recordInfo",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('HTTP Request').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer Bearer {{ $('On form submission').item.json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -432,
+        -16
+      ],
+      "id": "c5f1354e-c4df-4b5e-919e-76ca43893910",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2e533e19-554d-48bb-9599-9c13a6227483",
+              "leftValue": "=success",
+              "rightValue": "={{ $json.data.state }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "d44423e8-7e96-4b43-ac56-f35d4df48152",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst item = $input.first().json;\n\nconst result = JSON.parse(item.data.resultJson);\nconst videoUrl = result.resultUrls[0];\n\nif (!videoUrl) {\n  throw new Error('URL video tidak ditemukan');\n}\n\nreturn [\n  {\n    json: {\n      videoUrl: videoUrl\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "d5979954-a8d5-4f14-9013-35fd527212b4",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.videoUrl }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        -32
+      ],
+      "id": "a7756ffe-886b-48f8-a382-aff150097a58",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "name": "Hasil video generate AI",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1WUkMGJLxs0vEYX_8bfwOufWHetnuLCkh",
+          "mode": "list",
+          "cachedResultName": "Generate video AI",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1WUkMGJLxs0vEYX_8bfwOufWHetnuLCkh"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "4b1b1ab9-5a4c-4f1e-b39a-35c203398df6",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "Axms4wulIJy4cM8c",
+          "name": "Google Drive account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "333cef82-1a59-46a4-86ee-94c4c59955c5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc96f10ae7dc95d3c138575ba243a0a167923dbcb524841d451aadf9135d5fb3"
+  },
+  "nodeGroups": [],
+  "id": "66KeUWWHzjyRUQeJ",
+  "tags": []
+}
